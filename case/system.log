@@ -1,0 +1,6 @@
+10:14:32.100 INFO request received tx=TX-1042 ref=R-7781
+10:14:32.880 INFO authorization approved tx=TX-1042 ref=R-7781
+10:14:33.020 INFO settlement completed tx=TX-1042 ref=R-7781 amount=125.00
+10:14:33.021 WARN retry rejected duplicate tx=TX-1042 ref=R-7781
+10:14:33.022 INFO duplicate prevention rule matched tx=TX-1042
+10:14:40.000 INFO unrelated transaction tx=TX-1043

@@ -1,0 +1,11 @@
+OPERATOR NOTES
+
+TX-1042:
+The terminal displayed a timeout after the first request.
+The operator pressed retry once.
+
+The retry received a duplicate/retry rejection.
+No second successful settlement was observed at the operator terminal.
+
+Note:
+A second message does NOT necessarily mean a second financial settlement.

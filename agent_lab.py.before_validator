@@ -202,84 +202,6 @@ def call_model(messages, force_tool=False):
 
 # ---------------- AGENT ----------------
 
-# ---------------- VERDICT VALIDATOR ----------------
-
-def validate_verdict(answer):
-    """
-    Lightweight harness guardrail:
-    checks whether the stated VERDICT is consistent with the
-    natural-language conclusion produced by the agent.
-    """
-
-    if not answer:
-        return answer
-
-    a = answer.lower()
-
-    verdict_match = re.search(
-        r"verdict\s*:\s*(supported|partially supported|not supported|insufficient evidence)",
-        a
-    )
-
-    if not verdict_match:
-        return answer
-
-    verdict = verdict_match.group(1)
-
-    # Strong negative signals:
-    negative_signals = [
-        "was not processed twice",
-        "not processed twice",
-        "wasn't processed twice",
-        "only one settlement",
-        "only one successful settlement",
-        "no second successful settlement",
-        "second attempt was rejected",
-        "retry was rejected",
-        "duplicate prevention",
-        "did not occur twice",
-        "did not process twice",
-    ]
-
-    # Strong positive signals:
-    positive_signals = [
-        "was processed twice",
-        "processed twice financially",
-        "two successful settlements",
-        "second successful settlement",
-        "duplicate settlement occurred",
-    ]
-
-    negative_score = sum(x in a for x in negative_signals)
-    positive_score = sum(x in a for x in positive_signals)
-
-    corrected = None
-
-    if negative_score >= 2 and positive_score == 0:
-        if verdict == "supported":
-            corrected = "NOT SUPPORTED"
-    elif positive_score >= 2 and negative_score == 0:
-        if verdict == "not supported":
-            corrected = "SUPPORTED"
-
-    if corrected:
-        answer = re.sub(
-            r"(VERDICT\s*:\s*)(SUPPORTED|PARTIALLY SUPPORTED|NOT SUPPORTED|INSUFFICIENT EVIDENCE)",
-            lambda m: m.group(1) + corrected,
-            answer,
-            count=1,
-            flags=re.IGNORECASE
-        )
-
-        answer += (
-            "\n\n[HARNESS VALIDATION]\n"
-            f"The model's evidence narrative was consistent with "
-            f"'{corrected}', so the Harness corrected the final verdict label."
-        )
-
-    return answer
-
-
 SYSTEM = """You are Evidence Detective, a rigorous evidence-analysis agent.
 
 Your job is NOT to guess.
@@ -300,12 +222,6 @@ Rules:
    CONTRADICTING EVIDENCE:
    REASONING:
    FILES INSPECTED:
-
-IMPORTANT:
-The VERDICT describes the user's CLAIM, not the factual sentence you just wrote.
-For example, if the user asks "Was TX-1042 processed twice?" and your evidence says
-"TX-1042 was NOT processed twice", the correct verdict is NOT SUPPORTED.
-Never use SUPPORTED merely because your conclusion is strongly supported by evidence.
 9. Do not reveal hidden chain-of-thought. Give concise evidence-based reasoning only.
 """
 
@@ -328,7 +244,6 @@ def run_agent(task):
 
         if not tool_calls:
             answer = msg.get("content", "")
-            answer = validate_verdict(answer)
             trace.append({"step": step, "type": "final", "text": answer})
             return {
                 "trace": trace,
